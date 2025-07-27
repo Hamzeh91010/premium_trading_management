@@ -262,7 +262,7 @@ export function CurrencyPairAnalytics({ signals }: CurrencyPairAnalyticsProps) {
         <CardContent>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.profitChartData.slice(0, 6)}>
+              <BarChart data={analytics.profitChartData.slice(0, 6)} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis 
                   dataKey="pair" 
@@ -275,11 +275,47 @@ export function CurrencyPairAnalytics({ signals }: CurrencyPairAnalyticsProps) {
                 <Tooltip content={<CustomTooltip />} />
                 <Bar 
                   dataKey="profit" 
-                  fill="#10B981"
                   radius={[2, 2, 0, 0]}
-                />
+                >
+                  {analytics.profitChartData.slice(0, 6).map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? '#10B981' : '#EF4444'} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
+          </div>
+          
+          {/* Currency Pair List ordered by profit */}
+          <div className="mt-4 space-y-2">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              Currency Pairs by Profit
+            </h4>
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {analytics.profitChartData
+                .sort((a, b) => b.profit - a.profit)
+                .slice(0, 8)
+                .map((pair, index) => (
+                  <div key={pair.pair} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-500 text-xs w-4">#{index + 1}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {pair.pair}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        ({pair.trades} trades)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-bold ${pair.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatCurrency(pair.profit)}
+                      </span>
+                      <div className={`w-2 h-2 rounded-full ${pair.profit >= 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
         </CardContent>
       </Card>
