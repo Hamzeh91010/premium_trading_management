@@ -10,6 +10,40 @@ interface TradingResultsModalProps {
   isOpen: boolean
   onClose: () => void
 }
+
+const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClose }) => {
+  if (!isOpen) return null
+
+  const profitData = [
+    { time: '9:00', profit: 0 },
+    { time: '10:00', profit: 150 },
+    { time: '11:00', profit: 280 },
+    { time: '12:00', profit: 420 },
+    { time: '13:00', profit: 380 },
+    { time: '14:00', profit: 650 },
+    { time: '15:00', profit: 847 }
+  ]
+
+  const winLossData = [
+    { name: 'Wins', value: 78, color: '#10B981' },
+    { name: 'Losses', value: 22, color: '#EF4444' }
+  ]
+
+  const pairPerformance = [
+    { pair: 'EURUSD', profit: 450, trades: 25 },
+    { pair: 'GBPJPY', profit: 320, trades: 18 },
+    { pair: 'USDCAD', profit: 280, trades: 22 },
+    { pair: 'AUDUSD', profit: 190, trades: 15 }
+  ]
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Trading Results</h2>
+            <p className="text-gray-400">Your trading performance overview</p>
+          </div>
         {/* Recent Trading Signals */}
         <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
           <CardHeader>
@@ -345,7 +379,8 @@ interface TradingResultsModalProps {
                   </div>
                 ))}
               </div>
-        
+            </CardContent>
+          </Card>
 
           {/* Action Buttons */}
           <div className="flex justify-center gap-4 pt-4">
@@ -368,3 +403,5 @@ interface TradingResultsModalProps {
     </div>
   )
 }
+
+export default TradingResultsModal
