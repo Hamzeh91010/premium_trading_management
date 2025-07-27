@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { X, TrendingUp, TrendingDown, DollarSign, Target, Activity, Zap } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts'
 import { formatCurrency, formatPercentage } from '@/lib/utils'
+import TradingSignalsList from '@/components/signals/TradingSignalsList'
 
 interface TradingResultsModalProps {
   isOpen: boolean
