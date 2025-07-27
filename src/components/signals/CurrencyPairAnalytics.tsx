@@ -260,7 +260,7 @@ export function CurrencyPairAnalytics({ signals }: CurrencyPairAnalyticsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64">
+          <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={analytics.profitChartData.slice(0, 6)} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
