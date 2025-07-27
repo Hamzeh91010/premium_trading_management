@@ -290,7 +290,6 @@ export function CurrencyPairAnalytics({ signals }: CurrencyPairAnalyticsProps) {
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Currency Pairs by Profit
             </h4>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {analytics.profitChartData
                 .sort((a, b) => b.profit - a.profit)
