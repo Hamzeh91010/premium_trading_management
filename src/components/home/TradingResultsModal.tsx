@@ -10,43 +10,108 @@ interface TradingResultsModalProps {
   isOpen: boolean
   onClose: () => void
 }
-
-const profitData = [
-  { time: '00:00', profit: 120 },
-  { time: '04:00', profit: 180 },
-  { time: '08:00', profit: 150 },
-  { time: '12:00', profit: 220 },
-  { time: '16:00', profit: 280 },
-  { time: '20:00', profit: 350 },
-  { time: '24:00', profit: 420 },
-]
-
-const winLossData = [
-  { name: 'Wins', value: 78, color: '#10B981' },
-  { name: 'Losses', value: 22, color: '#EF4444' },
-]
-
-const pairPerformance = [
-  { pair: 'EURUSD', trades: 45, profit: 280 },
-  { pair: 'GBPJPY', trades: 32, profit: 150 },
-  { pair: 'USDCAD', trades: 28, profit: 95 },
-  { pair: 'AUDUSD', trades: 22, profit: 180 },
-]
-
-export function TradingResultsModal({ isOpen, onClose }: TradingResultsModalProps) {
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      
-      <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-gray-900/95 backdrop-blur-md rounded-2xl border border-gray-700/50 shadow-2xl modal-scrollbar">
-        <div className="sticky top-0 bg-gray-900/95 backdrop-blur-md border-b border-gray-700/50 p-6 z-10">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-white">Trading Results Overview</h2>
-              <p className="text-gray-400 mt-1">Your latest trading performance and statistics</p>
+        {/* Recent Trading Signals */}
+        <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-400" />
+              Recent Trading Signals
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="space-y-0">
+              {[
+                {
+                  pair: "USD/CNH OTC",
+                  direction: "BUY" as const,
+                  result: "win" as const,
+                  profit: 8.8,
+                  time: "2 min ago",
+                  payout: "+88%"
+                },
+                {
+                  pair: "AUD/CAD OTC", 
+                  direction: "BUY" as const,
+                  result: "win" as const,
+                  profit: 9.2,
+                  time: "5 min ago",
+                  payout: "+92%"
+                },
+                {
+                  pair: "EURUSD",
+                  direction: "SELL" as const,
+                  result: "win" as const,
+                  profit: 25.50,
+                  time: "8 min ago",
+                  payout: "+85%"
+                },
+                {
+                  pair: "GBPJPY",
+                  direction: "BUY" as const,
+                  result: "loss" as const,
+                  profit: -10.00,
+                  time: "12 min ago",
+                  payout: "-100%"
+                }
+              ].map((signal, index) => (
+                <div
+                  key={index}
+                  className={`flex items-center justify-between p-4 hover:bg-gray-700/30 transition-colors duration-200 ${
+                    index !== 3 ? 'border-b border-gray-700/30' : ''
+                  }`}
+                >
+                  {/* Left Section */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      {signal.result === 'win' ? (
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      ) : (
+                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                      )}
+                      <div className="font-semibold text-white">
+                        {signal.pair.replace(' OTC', '')}
+                        {signal.pair.includes('OTC') && (
+                          <span className="ml-2 text-xs text-purple-400 bg-purple-500/20 px-2 py-0.5 rounded">
+                            OTC
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <Badge 
+                      className={signal.direction === 'BUY' 
+                        ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                        : 'bg-red-500/20 text-red-400 border-red-500/30'
+                      }
+                    >
+                      {signal.direction === 'BUY' ? 'CALL' : 'PUT'}
+                    </Badge>
+                    
+                    <Badge 
+                      className={signal.result === 'win' 
+                        ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                        : 'bg-red-500/20 text-red-400 border-red-500/30'
+                      }
+                    >
+                      {signal.result}
+                    </Badge>
+                  </div>
+                  
+                  {/* Right Section */}
+                  <div className="text-right">
+                    <div className={`font-bold ${signal.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatCurrency(signal.profit)}
+                    </div>
+                    <div className="text-sm text-gray-400">{signal.time}</div>
+                    <div className="text-xs text-gray-500">{signal.payout}</div>
+                  </div>
+                </div>
+              ))}
             </div>
+          </CardContent>
+        </Card>
+
+
             <Button
               variant="ghost"
               size="icon"
@@ -280,8 +345,7 @@ export function TradingResultsModal({ isOpen, onClose }: TradingResultsModalProp
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+        
 
           {/* Action Buttons */}
           <div className="flex justify-center gap-4 pt-4">
