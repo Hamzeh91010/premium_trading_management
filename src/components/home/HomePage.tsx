@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { TradingBackground } from './TradingBackground'
-import { TradingResultsModal } from './TradingResultsModal'
+import TradingResultsModal from './TradingResultsModal'
 import { 
   TrendingUp, 
   BarChart3, 
