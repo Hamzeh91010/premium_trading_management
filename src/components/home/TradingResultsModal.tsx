@@ -164,6 +164,8 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
                 </div>
               </CardContent>
             </Card>
+          </div>
+
           {/* Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Profit Chart */}
