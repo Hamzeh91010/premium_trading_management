@@ -295,23 +295,25 @@ export function CurrencyPairAnalytics({ signals }: CurrencyPairAnalyticsProps) {
                 .sort((a, b) => b.profit - a.profit)
                 .slice(0, 8)
                 .map((pair, index) => (
-                  <div key={pair.pair} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <span className="text-gray-500 text-xs w-4">#{index + 1}</span>
-                        <span className="font-medium text-gray-900 dark:text-white">
+                  <div key={pair.pair} className="flex items-center justify-between py-2 px-3 bg-gray-100 dark:bg-gray-700/30 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="flex items-center gap-2 min-w-[60px]">
+                        <span className="text-gray-500 text-xs font-medium w-6 text-center">#{index + 1}</span>
+                        <div className={`w-3 h-3 rounded-full ${pair.profit >= 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                      </div>
+                      <div className="flex items-center gap-3 flex-1">
+                        <span className="font-semibold text-gray-900 dark:text-white min-w-[80px]">
                           {pair.pair}
                         </span>
+                        <span className="text-xs text-gray-500 bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded-full">
+                          {pair.trades} trades
+                        </span>
                       </div>
-                      <span className="text-xs text-gray-500">
-                        ({pair.trades} trades)
-                      </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`font-bold ${pair.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className="flex items-center gap-3 min-w-[100px] justify-end">
+                      <span className={`font-bold text-lg ${pair.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {formatCurrency(pair.profit)}
                       </span>
-                      <div className={`w-2 h-2 rounded-full ${pair.profit >= 0 ? 'bg-green-500' : 'bg-red-500'}`} />
                     </div>
                   </div>
                 ))}
