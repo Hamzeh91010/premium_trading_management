@@ -164,65 +164,6 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-            <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-green-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Total Profit</p>
-                    <p className="text-xl font-bold text-green-400">$2,847.50</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <Target className="w-5 h-5 text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Win Rate</p>
-                    <p className="text-xl font-bold text-blue-400">78.5%</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                    <Activity className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Total Trades</p>
-                    <p className="text-xl font-bold text-purple-400">127</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-amber-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Active Bots</p>
-                    <p className="text-xl font-bold text-amber-400">3</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Profit Chart */}
