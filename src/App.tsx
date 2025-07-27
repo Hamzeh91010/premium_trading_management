@@ -13,6 +13,18 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
 
+  useEffect(() => {
+    const handleNavigateToTab = (event: CustomEvent) => {
+      setActiveTab(event.detail)
+    }
+
+    window.addEventListener('navigateToTab', handleNavigateToTab as EventListener)
+    
+    return () => {
+      window.removeEventListener('navigateToTab', handleNavigateToTab as EventListener)
+    }
+  }, [])
+
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed)
   }

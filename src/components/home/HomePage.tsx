@@ -32,20 +32,33 @@ export function HomePage({ onEnterDashboard }: HomePageProps) {
     return () => clearTimeout(timer)
   }, [])
 
+  const handleFeatureClick = (feature: string) => {
+    // Navigate to dashboard with specific tab
+    onEnterDashboard()
+    // Small delay to ensure dashboard is loaded before setting active tab
+    setTimeout(() => {
+      const event = new CustomEvent('navigateToTab', { detail: feature })
+      window.dispatchEvent(event)
+    }, 100)
+  }
+
   const features = [
     {
+      id: 'signals',
       icon: <Clock className="w-6 h-6" />,
       title: 'Live Signal Tracking',
       description: 'Monitor upcoming trading signals in real-time with countdown timers and execution status',
       color: 'from-blue-500 to-cyan-500'
     },
     {
+      id: 'analytics',
       icon: <BarChart3 className="w-6 h-6" />,
       title: 'Trading Statistics',
       description: 'Track your trading performance with detailed statistics and visualizations',
       color: 'from-purple-500 to-pink-500'
     },
     {
+      id: 'bots',
       icon: <Target className="w-6 h-6" />,
       title: 'Complete Control',
       description: 'Control your trading bot with pause/resume functionality and customize settings',
@@ -142,9 +155,10 @@ export function HomePage({ onEnterDashboard }: HomePageProps) {
           {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             {features.map((feature, index) => (
-              <Card 
+              <Card
                 key={index}
-                className="bg-gray-800/30 backdrop-blur-md border-gray-700/50 hover:bg-gray-800/50 transition-all duration-300 group"
+                className="bg-gray-800/30 backdrop-blur-md border-gray-700/50 hover:bg-gray-800/50 transition-all duration-300 group cursor-pointer transform hover:scale-105"
+                onClick={() => handleFeatureClick(feature.id)}
               >
                 <CardContent className="p-6 text-center">
                   <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
@@ -158,6 +172,12 @@ export function HomePage({ onEnterDashboard }: HomePageProps) {
                   <p className="text-gray-400 leading-relaxed">
                     {feature.description}
                   </p>
+                  <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="inline-flex items-center text-sm text-blue-400 font-medium">
+                      Click to explore
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
