@@ -30,16 +30,16 @@ interface CurrencyPairAnalyticsProps {
 }
 
 const COLORS = [
-  '#3B82F6', // Blue
-  '#10B981', // Green
+  '#4F46E5', // Indigo
+  '#10B981', // Emerald
   '#F59E0B', // Amber
   '#EF4444', // Red
-  '#8B5CF6', // Purple
+  '#8B5CF6', // Violet
   '#06B6D4', // Cyan
   '#F97316', // Orange
   '#84CC16', // Lime
   '#EC4899', // Pink
-  '#6B7280', // Gray
+  '#64748B', // Slate
 ]
 
 export function CurrencyPairAnalytics({ signals }: CurrencyPairAnalyticsProps) {
@@ -164,10 +164,10 @@ export function CurrencyPairAnalytics({ signals }: CurrencyPairAnalyticsProps) {
   }
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percentage }: any) => {
-    if (percentage < 5) return null // Don't show labels for small slices
+    if (percentage < 8) return null // Don't show labels for small slices
     
     const RADIAN = Math.PI / 180
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.6
     const x = cx + radius * Math.cos(-midAngle * RADIAN)
     const y = cy + radius * Math.sin(-midAngle * RADIAN)
 
@@ -178,8 +178,12 @@ export function CurrencyPairAnalytics({ signals }: CurrencyPairAnalyticsProps) {
         fill="white" 
         textAnchor={x > cx ? 'start' : 'end'} 
         dominantBaseline="central"
-        fontSize="12"
+        fontSize="14"
         fontWeight="bold"
+        style={{ 
+          textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+          filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))'
+        }}
       >
         {`${percentage.toFixed(0)}%`}
       </text>
@@ -206,9 +210,12 @@ export function CurrencyPairAnalytics({ signals }: CurrencyPairAnalyticsProps) {
                   cy="50%"
                   labelLine={false}
                   label={renderCustomizedLabel}
-                  outerRadius={80}
+                  outerRadius={90}
+                  innerRadius={20}
                   fill="#8884d8"
                   dataKey="value"
+                  stroke="rgba(255,255,255,0.1)"
+                  strokeWidth={2}
                 >
                   {analytics.pieChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
