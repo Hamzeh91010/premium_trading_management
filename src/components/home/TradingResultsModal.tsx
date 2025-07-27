@@ -40,112 +40,11 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-6xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Trading Results</h2>
-            <p className="text-gray-400">Your trading performance overview</p>
-          </div>
-        {/* Recent Trading Signals */}
-        <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Activity className="w-5 h-5 text-blue-400" />
-              Recent Trading Signals
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="space-y-0">
-              {[
-                {
-                  pair: "USD/CNH OTC",
-                  direction: "BUY" as const,
-                  result: "win" as const,
-                  profit: 8.8,
-                  time: "2 min ago",
-                  payout: "+88%"
-                },
-                {
-                  pair: "AUD/CAD OTC", 
-                  direction: "BUY" as const,
-                  result: "win" as const,
-                  profit: 9.2,
-                  time: "5 min ago",
-                  payout: "+92%"
-                },
-                {
-                  pair: "EURUSD",
-                  direction: "SELL" as const,
-                  result: "win" as const,
-                  profit: 25.50,
-                  time: "8 min ago",
-                  payout: "+85%"
-                },
-                {
-                  pair: "GBPJPY",
-                  direction: "BUY" as const,
-                  result: "loss" as const,
-                  profit: -10.00,
-                  time: "12 min ago",
-                  payout: "-100%"
-                }
-              ].map((signal, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center justify-between p-4 hover:bg-gray-700/30 transition-colors duration-200 ${
-                    index !== 3 ? 'border-b border-gray-700/30' : ''
-                  }`}
-                >
-                  {/* Left Section */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      {signal.result === 'win' ? (
-                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                      ) : (
-                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                      )}
-                      <div className="font-semibold text-white">
-                        {signal.pair.replace(' OTC', '')}
-                        {signal.pair.includes('OTC') && (
-                          <span className="ml-2 text-xs text-purple-400 bg-purple-500/20 px-2 py-0.5 rounded">
-                            OTC
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <Badge 
-                      className={signal.direction === 'BUY' 
-                        ? 'bg-green-500/20 text-green-400 border-green-500/30' 
-                        : 'bg-red-500/20 text-red-400 border-red-500/30'
-                      }
-                    >
-                      {signal.direction === 'BUY' ? 'CALL' : 'PUT'}
-                    </Badge>
-                    
-                    <Badge 
-                      className={signal.result === 'win' 
-                        ? 'bg-green-500/20 text-green-400 border-green-500/30' 
-                        : 'bg-red-500/20 text-red-400 border-red-500/30'
-                      }
-                    >
-                      {signal.result}
-                    </Badge>
-                  </div>
-                  
-                  {/* Right Section */}
-                  <div className="text-right">
-                    <div className={`font-bold ${signal.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {formatCurrency(signal.profit)}
-                    </div>
-                    <div className="text-sm text-gray-400">{signal.time}</div>
-                    <div className="text-xs text-gray-500">{signal.payout}</div>
-                  </div>
-                </div>
-              ))}
+          <>
+            <div>
+              <h2 className="text-2xl font-bold text-white">Trading Results</h2>
+              <p className="text-gray-400">Your trading performance overview</p>
             </div>
-          </CardContent>
-        </Card>
-
-
             <Button
               variant="ghost"
               size="icon"
@@ -154,12 +53,119 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
             >
               <X className="w-5 h-5" />
             </Button>
-          </div>
+          </>
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Recent Trading Signals */}
+          <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Activity className="w-5 h-5 text-blue-400" />
+                Recent Trading Signals
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="space-y-0">
+                {[
+                  {
+                    pair: "USD/CNH OTC",
+                    direction: "BUY" as const,
+                    result: "win" as const,
+                    profit: 8.8,
+                    time: "2 min ago",
+                    payout: "+88%"
+                  },
+                  {
+                    pair: "AUD/CAD OTC", 
+                    direction: "BUY" as const,
+                    result: "win" as const,
+                    profit: 9.2,
+                    time: "5 min ago",
+                    payout: "+92%"
+                  },
+                  {
+                    pair: "EURUSD",
+                    direction: "SELL" as const,
+                    result: "win" as const,
+                    profit: 25.50,
+                    time: "8 min ago",
+                    payout: "+85%"
+                  },
+                  {
+                    pair: "GBPJPY",
+                    direction: "BUY" as const,
+                    result: "loss" as const,
+                    profit: -10.00,
+                    time: "12 min ago",
+                    payout: "-100%"
+                  }
+                ].map((signal, index) => (
+                  <TradingSignalsList key={index} signals={[signal]} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Key Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Total Profit</p>
+                    <p className="text-xl font-bold text-green-400">$2,847.50</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Target className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Win Rate</p>
+                    <p className="text-xl font-bold text-blue-400">78.5%</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Total Trades</p>
+                    <p className="text-xl font-bold text-purple-400">127</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Active Bots</p>
+                    <p className="text-xl font-bold text-amber-400">3</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
             <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
