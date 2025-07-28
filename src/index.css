@@ -95,6 +95,31 @@
   background: #64748b;
 }
 
+/* Custom dark scrollbar for modals */
+.custom-dark-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-dark-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-dark-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.custom-dark-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* For Firefox */
+.custom-dark-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.4) transparent;
+}
+
 /* Modal scrollbar styles */
 .modal-scrollbar::-webkit-scrollbar {
   width: 4px;
