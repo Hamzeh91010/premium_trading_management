@@ -181,6 +181,11 @@ export function BotManager() {
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {bot.type.replace('_', ' ').toUpperCase()}
                     </p>
+                    {bot.id === 'trade_runner' && (
+                      <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
+                        Base Amount: ${tradeAmount}
+                      </p>
+                    )}
                   </div>
                 </div>
                 
