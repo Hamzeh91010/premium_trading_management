@@ -463,7 +463,6 @@ export function TradingSignalsTable() {
             </table>
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
               <div className="text-sm text-gray-600 dark:text-gray-400">
