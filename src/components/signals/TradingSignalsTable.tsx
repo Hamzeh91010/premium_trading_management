@@ -275,6 +275,7 @@ export function TradingSignalsTable() {
               <span className="text-gray-600 dark:text-gray-400">Loading trading signals...</span>
             </div>
           ) : (
+          <>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-800">
@@ -524,6 +525,7 @@ export function TradingSignalsTable() {
               </p>
             </div>
           )}
+          </>
           )}
         </CardContent>
       </Card>
