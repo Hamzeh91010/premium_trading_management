@@ -46,7 +46,8 @@ export function BotManager() {
           }
         }
       } catch (error) {
-        console.log('Could not load settings, using default amount')
+        console.log('Could not load settings, using default amount of $10.00')
+        setTradeAmount('10.00')
       }
     }
     loadTradeAmount()
