@@ -19,12 +19,58 @@ import { getStatusColor } from '@/lib/utils'
 
 export function BotManager() {
   const { bots, startBot, stopBot, restartBot, updateBotStatus } = useBotManager()
+  const [tradeAmount, setTradeAmount] = React.useState('10.00')
+  const [isLoading, setIsLoading] = React.useState(false)
 
   useEffect(() => {
     // Update bot status every 30 seconds
     const interval = setInterval(updateBotStatus, 30000)
     return () => clearInterval(interval)
   }, [updateBotStatus])
+
+  useEffect(() => {
+    // Load initial trade amount from settings
+    const loadTradeAmount = async () => {
+      try {
+        const response = await fetch('/settings.json')
+        if (response.ok) {
+          const settings = await response.json()
+          if (settings.tradeAmount) {
+            setTradeAmount(settings.tradeAmount.toString())
+          }
+        }
+      } catch (error) {
+        console.log('Could not load settings, using default amount')
+      }
+    }
+    loadTradeAmount()
+  }, [])
+
+  const handleSaveAmount = async () => {
+    if (!tradeAmount || parseFloat(tradeAmount) <= 0) {
+      alert('Please enter a valid amount')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Simulate API call to save settings
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      const settings = {
+        tradeAmount: parseFloat(tradeAmount),
+        updatedAt: new Date().toISOString()
+      }
+      
+      // In a real app, this would be an API call
+      console.log('Settings saved:', settings)
+      alert('Trade amount saved successfully!')
+    } catch (error) {
+      alert('Failed to save trade amount')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
