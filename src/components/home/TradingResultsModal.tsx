@@ -153,22 +153,20 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-6xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <>
-            <div>
-              <h2 className="text-2xl font-bold text-white">Trading Results</h2>
-              <p className="text-gray-400">
-                {loading ? 'Loading...' : `Your trading performance overview (${signals.length} total signals)`}
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="text-gray-400 hover:text-white hover:bg-gray-800"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </>
+          <div>
+            <h2 className="text-2xl font-bold text-white">Trading Results</h2>
+            <p className="text-gray-400">
+              {loading ? 'Loading...' : `Your trading performance overview (${signals.length} total signals)`}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="text-gray-400 hover:text-white hover:bg-gray-800"
+          >
+            <X className="w-5 h-5" />
+          </Button>
         </div>
 
         {loading ? (
@@ -344,6 +342,11 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+            </div>
+          )}
+
           {pairPerformance.length > 0 && (
             <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
               <CardHeader>
@@ -359,12 +362,13 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
                       <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                       <XAxis 
                         dataKey="pair" 
+                        stroke="#9CA3AF"
                         tick={{ fontSize: 10 }}
                         angle={-45}
                         textAnchor="end"
                         height={40}
                       />
-                      <YAxis tick={{ fontSize: 10 }} />
+                      <YAxis stroke="#9CA3AF" tick={{ fontSize: 10 }} />
                       <Tooltip 
                         contentStyle={{
                           backgroundColor: '#1F2937',
