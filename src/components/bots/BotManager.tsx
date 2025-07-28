@@ -185,6 +185,12 @@ export function BotManager() {
                     {bot.config.restartCount}/{bot.config.maxRestarts}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Python Script:</span>
+                  <span className="font-medium text-xs font-mono">
+                    {bot.type === 'telegram_listener' ? 'telegram_listener_client.py' : 'trade_signal_runner.py'}
+                  </span>
+                </div>
                 {bot.lastActivity && (
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Last Activity:</span>
@@ -198,7 +204,7 @@ export function BotManager() {
               {/* Recent Logs */}
               <div className="space-y-2">
                 <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                  Recent Activity
+                  Python Process Logs
                 </div>
                 <div className="bg-gray-900 text-green-400 p-3 rounded-lg font-mono text-xs max-h-32 overflow-y-auto">
                   {bot.logs.length > 0 ? (
@@ -208,7 +214,7 @@ export function BotManager() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-gray-500">No activity logs</div>
+                    <div className="text-gray-500">No process logs available</div>
                   )}
                 </div>
               </div>

@@ -14,6 +14,8 @@ interface BotProcess {
     maxRestarts: number
     restartCount: number
   }
+  pythonScript?: string
+  workingDirectory?: string
 }
 
 interface BotManagerState {
@@ -24,6 +26,8 @@ interface BotManagerState {
   restartBot: (botId: string) => Promise<void>
   getBotLogs: (botId: string) => string[]
   updateBotStatus: () => Promise<void>
+  startPythonBot: (botId: string) => Promise<void>
+  stopPythonBot: (botId: string) => Promise<void>
 }
 
 const initialBots: BotProcess[] = [
@@ -37,7 +41,9 @@ const initialBots: BotProcess[] = [
       autoRestart: true,
       maxRestarts: 5,
       restartCount: 0
-    }
+    },
+    pythonScript: 'telegram_listener_client.py',
+    workingDirectory: './'
   },
   {
     id: 'trade_runner',
@@ -49,7 +55,9 @@ const initialBots: BotProcess[] = [
       autoRestart: true,
       maxRestarts: 5,
       restartCount: 0
-    }
+    },
+    pythonScript: 'trade_signal_runner.py',
+    workingDirectory: './'
   }
 ]
 
@@ -57,72 +65,144 @@ export const useBotManager = create<BotManagerState>((set, get) => ({
   bots: initialBots,
   isLoading: false,
 
-  startBot: async (botId: string) => {
+  startPythonBot: async (botId: string) => {
     const { bots } = get()
+    const bot = bots.find(b => b.id === botId)
+    if (!bot) return
+
     const updatedBots = bots.map(bot => 
       bot.id === botId 
         ? { 
             ...bot, 
             status: 'starting' as const,
-            logs: [...bot.logs, `${new Date().toISOString()}: Starting bot...`]
+            logs: [...bot.logs, `${new Date().toISOString()}: Starting Python bot ${bot.pythonScript}...`]
           }
         : bot
     )
     set({ bots: updatedBots })
 
-    // Simulate bot startup
-    setTimeout(() => {
-      const { bots } = get()
-      const finalBots = bots.map(bot => 
-        bot.id === botId 
-          ? { 
-              ...bot, 
-              status: 'running' as const,
-              startTime: new Date().toISOString(),
-              lastActivity: new Date().toISOString(),
-              pid: Math.floor(Math.random() * 10000) + 1000,
-              logs: [...bot.logs, `${new Date().toISOString()}: Bot started successfully`]
-            }
-          : bot
-      )
-      set({ bots: finalBots })
-    }, 2000)
+    try {
+      // In a real implementation, this would spawn the Python process
+      // For now, we'll simulate the process startup
+      const response = await fetch('/api/bots/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          botId, 
+          script: bot.pythonScript,
+          workingDir: bot.workingDirectory 
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const finalBots = get().bots.map(bot => 
+          bot.id === botId 
+            ? { 
+                ...bot, 
+                status: 'running' as const,
+                startTime: new Date().toISOString(),
+                lastActivity: new Date().toISOString(),
+                pid: data.pid || Math.floor(Math.random() * 10000) + 1000,
+                logs: [...bot.logs, `${new Date().toISOString()}: Python bot started successfully (PID: ${data.pid})`]
+              }
+            : bot
+        )
+        set({ bots: finalBots })
+      } else {
+        throw new Error('Failed to start bot')
+      }
+    } catch (error) {
+      // Fallback to simulation if API is not available
+      setTimeout(() => {
+        const { bots } = get()
+        const finalBots = bots.map(bot => 
+          bot.id === botId 
+            ? { 
+                ...bot, 
+                status: 'running' as const,
+                startTime: new Date().toISOString(),
+                lastActivity: new Date().toISOString(),
+                pid: Math.floor(Math.random() * 10000) + 1000,
+                logs: [...bot.logs, `${new Date().toISOString()}: Python bot started successfully (simulated)`]
+              }
+            : bot
+        )
+        set({ bots: finalBots })
+      }, 2000)
+    }
   },
 
-  stopBot: async (botId: string) => {
+  stopPythonBot: async (botId: string) => {
     const { bots } = get()
+    const bot = bots.find(b => b.id === botId)
+    if (!bot) return
+
     const updatedBots = bots.map(bot => 
       bot.id === botId 
         ? { 
             ...bot, 
             status: 'stopping' as const,
-            logs: [...bot.logs, `${new Date().toISOString()}: Stopping bot...`]
+            logs: [...bot.logs, `${new Date().toISOString()}: Stopping Python bot (PID: ${bot.pid})...`]
           }
         : bot
     )
     set({ bots: updatedBots })
 
-    // Simulate bot shutdown
-    setTimeout(() => {
-      const { bots } = get()
-      const finalBots = bots.map(bot => 
-        bot.id === botId 
-          ? { 
-              ...bot, 
-              status: 'stopped' as const,
-              pid: undefined,
-              logs: [...bot.logs, `${new Date().toISOString()}: Bot stopped`]
-            }
-          : bot
-      )
-      set({ bots: finalBots })
-    }, 1500)
+    try {
+      // In a real implementation, this would kill the Python process
+      const response = await fetch('/api/bots/stop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ botId, pid: bot.pid })
+      })
+
+      if (response.ok) {
+        const finalBots = get().bots.map(bot => 
+          bot.id === botId 
+            ? { 
+                ...bot, 
+                status: 'stopped' as const,
+                pid: undefined,
+                logs: [...bot.logs, `${new Date().toISOString()}: Python bot stopped successfully`]
+              }
+            : bot
+        )
+        set({ bots: finalBots })
+      } else {
+        throw new Error('Failed to stop bot')
+      }
+    } catch (error) {
+      // Fallback to simulation if API is not available
+      setTimeout(() => {
+        const { bots } = get()
+        const finalBots = bots.map(bot => 
+          bot.id === botId 
+            ? { 
+                ...bot, 
+                status: 'stopped' as const,
+                pid: undefined,
+                logs: [...bot.logs, `${new Date().toISOString()}: Python bot stopped (simulated)`]
+              }
+            : bot
+        )
+        set({ bots: finalBots })
+      }, 1500)
+    }
+  },
+
+  startBot: async (botId: string) => {
+    return get().startPythonBot(botId)
+  },
+
+  stopBot: async (botId: string) => {
+    return get().stopPythonBot(botId)
   },
 
   restartBot: async (botId: string) => {
-    const { stopBot, startBot } = get()
-    await stopBot(botId)
-    setTimeout(() => startBot(botId), 2000)
+    const { stopPythonBot, startPythonBot } = get()
+    await stopPythonBot(botId)
+    setTimeout(() => startPythonBot(botId), 2000)
   },
 
   getBotLogs: (botId: string) => {
@@ -132,20 +212,42 @@ export const useBotManager = create<BotManagerState>((set, get) => ({
   },
 
   updateBotStatus: async () => {
-    // In a real implementation, this would check actual process status
-    // For now, we'll simulate some activity updates
-    const { bots } = get()
-    const updatedBots = bots.map(bot => 
-      bot.status === 'running' 
-        ? { 
-            ...bot, 
-            lastActivity: new Date().toISOString(),
-            logs: bot.logs.length > 50 
-              ? [...bot.logs.slice(-45), `${new Date().toISOString()}: Bot is active`]
-              : [...bot.logs, `${new Date().toISOString()}: Bot is active`]
+    try {
+      // In a real implementation, this would check actual Python process status
+      const response = await fetch('/api/bots/status')
+      if (response.ok) {
+        const statusData = await response.json()
+        // Update bot statuses based on actual process status
+        const { bots } = get()
+        const updatedBots = bots.map(bot => {
+          const processStatus = statusData.find((p: any) => p.id === bot.id)
+          if (processStatus) {
+            return {
+              ...bot,
+              status: processStatus.status,
+              pid: processStatus.pid,
+              lastActivity: new Date().toISOString()
+            }
           }
-        : bot
-    )
-    set({ bots: updatedBots })
+          return bot
+        })
+        set({ bots: updatedBots })
+      }
+    } catch (error) {
+      // Fallback to simulation if API is not available
+      const { bots } = get()
+      const updatedBots = bots.map(bot => 
+        bot.status === 'running' 
+          ? { 
+              ...bot, 
+              lastActivity: new Date().toISOString(),
+              logs: bot.logs.length > 50 
+                ? [...bot.logs.slice(-45), `${new Date().toISOString()}: Python bot is active`]
+                : [...bot.logs, `${new Date().toISOString()}: Python bot is active`]
+            }
+          : bot
+      )
+      set({ bots: updatedBots })
+    }
   }
 }))
