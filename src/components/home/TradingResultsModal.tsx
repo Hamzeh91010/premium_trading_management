@@ -1,4 +1,5 @@
 import React from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -7,35 +8,146 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { formatCurrency, formatPercentage } from '@/lib/utils'
 import { TradingSignalsList } from '@/components/signals/TradingSignalsList'
 
+interface TradingSignal {
+  pair: string
+  entry_time: string
+  direction: 'BUY' | 'SELL'
+  trade_duration: string
+  is_otc: boolean
+  is_expired: boolean
+  received_at: string
+  result: 'win' | 'loss' | null
+  message_id: number
+  raw_text: string
+  martingale_times: string[]
+  executed: boolean
+  end_time?: string
+  payout_percent?: string
+  total_profit?: number
+  total_staked?: number
+  base_amount?: number
+  trade_count?: number
+}
+
 interface TradingResultsModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
 const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClose }) => {
+  const [signals, setSignals] = useState<TradingSignal[]>([])
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    totalProfit: 0,
+    winRate: 0,
+    totalTrades: 0,
+    activeBots: 3
+  })
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchSignalsData()
+    }
+  }, [isOpen])
+
+  const fetchSignalsData = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/ALLSignals.json')
+      if (response.ok) {
+        const data: TradingSignal[] = await response.json()
+        setSignals(data)
+        calculateStats(data)
+      } else {
+        console.error('Failed to fetch signals data')
+      }
+    } catch (error) {
+      console.error('Error fetching signals:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const calculateStats = (signalsData: TradingSignal[]) => {
+    const executedSignals = signalsData.filter(s => s.executed && s.result !== null)
+    const wins = executedSignals.filter(s => s.result === 'win').length
+    const totalProfit = executedSignals.reduce((sum, s) => sum + (s.total_profit || 0), 0)
+    const winRate = executedSignals.length > 0 ? (wins / executedSignals.length) * 100 : 0
+
+    setStats({
+      totalProfit,
+      winRate,
+      totalTrades: executedSignals.length,
+      activeBots: 3
+    })
+  }
+
+  const getRecentSignals = () => {
+    return signals
+      .filter(s => s.executed && s.result !== null)
+      .sort((a, b) => new Date(b.received_at).getTime() - new Date(a.received_at).getTime())
+      .slice(0, 10)
+  }
+
+  const getProfitData = () => {
+    const executedSignals = signals.filter(s => s.executed && s.result !== null)
+    const dailyProfits = new Map<string, number>()
+    
+    executedSignals.forEach(signal => {
+      const date = signal.received_at.split(' ')[0]
+      const profit = signal.total_profit || 0
+      dailyProfits.set(date, (dailyProfits.get(date) || 0) + profit)
+    })
+
+    return Array.from(dailyProfits.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-7) // Last 7 days
+      .map(([date, profit], index) => ({
+        time: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        profit: Math.round(profit * 100) / 100
+      }))
+  }
+
+  const getWinLossData = () => {
+    const executedSignals = signals.filter(s => s.executed && s.result !== null)
+    const wins = executedSignals.filter(s => s.result === 'win').length
+    const losses = executedSignals.length - wins
+    const winRate = executedSignals.length > 0 ? (wins / executedSignals.length) * 100 : 0
+    const lossRate = 100 - winRate
+
+    return [
+      { name: 'Wins', value: Math.round(winRate), color: '#10B981' },
+      { name: 'Losses', value: Math.round(lossRate), color: '#EF4444' }
+    ]
+  }
+
+  const getPairPerformance = () => {
+    const pairStats = new Map<string, { profit: number, trades: number }>()
+    
+    signals.filter(s => s.executed && s.result !== null).forEach(signal => {
+      const pair = signal.pair.replace(' OTC', '')
+      const current = pairStats.get(pair) || { profit: 0, trades: 0 }
+      current.profit += signal.total_profit || 0
+      current.trades += 1
+      pairStats.set(pair, current)
+    })
+
+    return Array.from(pairStats.entries())
+      .map(([pair, stats]) => ({
+        pair,
+        profit: Math.round(stats.profit * 100) / 100,
+        trades: stats.trades
+      }))
+      .sort((a, b) => b.profit - a.profit)
+      .slice(0, 6)
+  }
+
   if (!isOpen) return null
 
-  const profitData = [
-    { time: '9:00', profit: 0 },
-    { time: '10:00', profit: 150 },
-    { time: '11:00', profit: 280 },
-    { time: '12:00', profit: 420 },
-    { time: '13:00', profit: 380 },
-    { time: '14:00', profit: 650 },
-    { time: '15:00', profit: 847 }
-  ]
-
-  const winLossData = [
-    { name: 'Wins', value: 78, color: '#10B981' },
-    { name: 'Losses', value: 22, color: '#EF4444' }
-  ]
-
-  const pairPerformance = [
-    { pair: 'EURUSD', profit: 450, trades: 25 },
-    { pair: 'GBPJPY', profit: 320, trades: 18 },
-    { pair: 'USDCAD', profit: 280, trades: 22 },
-    { pair: 'AUDUSD', profit: 190, trades: 15 }
-  ]
+  const profitData = getProfitData()
+  const winLossData = getWinLossData()
+  const pairPerformance = getPairPerformance()
+  const recentSignals = getRecentSignals()
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -44,7 +156,9 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
           <>
             <div>
               <h2 className="text-2xl font-bold text-white">Trading Results</h2>
-              <p className="text-gray-400">Your trading performance overview</p>
+              <p className="text-gray-400">
+                {loading ? 'Loading...' : `Your trading performance overview (${signals.length} total signals)`}
+              </p>
             </div>
             <Button
               variant="ghost"
@@ -57,7 +171,13 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
           </>
         </div>
 
-        <div className="p-6 space-y-6">
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading trading data...</p>
+          </div>
+        ) : (
+          <div className="p-6 space-y-6">
           {/* Recent Trading Signals */}
           <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
             <CardHeader>
@@ -67,44 +187,13 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="space-y-0">
-                {[
-                  {
-                    pair: "USD/CNH OTC",
-                    direction: "BUY" as const,
-                    result: "win" as const,
-                    profit: 8.8,
-                    time: "2 min ago",
-                    payout: "+88%"
-                  },
-                  {
-                    pair: "AUD/CAD OTC", 
-                    direction: "BUY" as const,
-                    result: "win" as const,
-                    profit: 9.2,
-                    time: "5 min ago",
-                    payout: "+92%"
-                  },
-                  {
-                    pair: "EURUSD",
-                    direction: "SELL" as const,
-                    result: "win" as const,
-                    profit: 25.50,
-                    time: "8 min ago",
-                    payout: "+85%"
-                  },
-                  {
-                    pair: "GBPJPY",
-                    direction: "BUY" as const,
-                    result: "loss" as const,
-                    profit: -10.00,
-                    time: "12 min ago",
-                    payout: "-100%"
-                  }
-                ].map((signal, index) => (
-                  <TradingSignalsList key={index} signals={[signal]} />
-                ))}
-              </div>
+              {recentSignals.length > 0 ? (
+                <TradingSignalsList signals={recentSignals} maxItems={10} />
+              ) : (
+                <div className="p-8 text-center text-gray-400">
+                  No trading signals found
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -118,7 +207,9 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Total Profit</p>
-                    <p className="text-xl font-bold text-green-400">$2,847.50</p>
+                    <p className={`text-xl font-bold ${stats.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatCurrency(stats.totalProfit)}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -132,7 +223,7 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Win Rate</p>
-                    <p className="text-xl font-bold text-blue-400">78.5%</p>
+                    <p className="text-xl font-bold text-blue-400">{formatPercentage(stats.winRate)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -146,7 +237,7 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Total Trades</p>
-                    <p className="text-xl font-bold text-purple-400">127</p>
+                    <p className="text-xl font-bold text-purple-400">{stats.totalTrades}</p>
                   </div>
                 </div>
               </CardContent>
@@ -160,7 +251,7 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Active Bots</p>
-                    <p className="text-xl font-bold text-amber-400">3</p>
+                    <p className="text-xl font-bold text-amber-400">{stats.activeBots}</p>
                   </div>
                 </div>
               </CardContent>
@@ -168,13 +259,14 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
           </div>
 
           {/* Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {profitData.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Profit Chart */}
             <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-green-400" />
-                  Profit Timeline
+                  Daily Profit Timeline
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -245,92 +337,57 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
                   </ResponsiveContainer>
                 </div>
                 <div className="flex justify-center gap-4 mt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-gray-300">Wins (78%)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span className="text-sm text-gray-300">Losses (22%)</span>
-                  </div>
+                  {winLossData.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                      <span className="text-sm text-gray-300">{item.name} ({item.value}%)</span>
+                    </div>
+                  ))}
+                </div>
+          {pairPerformance.length > 0 && (
+            <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-purple-400" />
+                  Currency Pair Performance
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={pairPerformance}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis 
+                        dataKey="pair" 
+                        tick={{ fontSize: 10 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={40}
+                      />
+                      <YAxis tick={{ fontSize: 10 }} />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: '#1F2937',
+                          border: '1px solid #374151',
+                          borderRadius: '8px',
+                          color: '#F9FAFB'
+                        }}
+                        formatter={(value, name) => [
+                          name === 'profit' ? `$${value}` : value,
+                          name === 'profit' ? 'Profit' : 'Trades'
+                        ]}
+                      />
+                      <Bar dataKey="profit" radius={[4, 4, 0, 0]}>
+                        {pairPerformance.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? '#10B981' : '#EF4444'} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Pair Performance */}
-          <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Activity className="w-5 h-5 text-purple-400" />
-                Currency Pair Performance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={pairPerformance}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="pair" stroke="#9CA3AF" />
-                    <YAxis stroke="#9CA3AF" />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: '#1F2937',
-                        border: '1px solid #374151',
-                        borderRadius: '8px',
-                        color: '#F9FAFB'
-                      }}
-                      formatter={(value, name) => [
-                        name === 'profit' ? `$${value}` : value,
-                        name === 'profit' ? 'Profit' : 'Trades'
-                      ]}
-                    />
-                    <Bar dataKey="profit" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Trades */}
-          <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white">Recent Trades</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  { pair: 'EURUSD', direction: 'CALL', profit: 25.50, time: '2 min ago', status: 'won' },
-                  { pair: 'GBPJPY', direction: 'PUT', profit: -10.00, time: '5 min ago', status: 'lost' },
-                  { pair: 'USDCAD', direction: 'CALL', profit: 18.75, time: '8 min ago', status: 'won' },
-                  { pair: 'AUDUSD', direction: 'PUT', profit: 22.00, time: '12 min ago', status: 'won' },
-                ].map((trade, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="font-medium text-white">{trade.pair}</div>
-                      <Badge 
-                        variant="outline" 
-                        className={trade.direction === 'CALL' ? 'border-green-500 text-green-400' : 'border-red-500 text-red-400'}
-                      >
-                        {trade.direction}
-                      </Badge>
-                      <Badge 
-                        className={trade.status === 'won' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}
-                      >
-                        {trade.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className={`font-medium ${trade.profit > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {formatCurrency(trade.profit)}
-                      </span>
-                      <span className="text-sm text-gray-400">{trade.time}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          )}
 
           {/* Action Buttons */}
           <div className="flex justify-center gap-4 pt-4">
@@ -348,7 +405,8 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
               View Full Report
             </Button>
           </div>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )
