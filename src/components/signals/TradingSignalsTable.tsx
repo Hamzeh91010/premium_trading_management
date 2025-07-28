@@ -463,7 +463,6 @@ export function TradingSignalsTable() {
             </table>
           </div>
 
-          <>
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
               <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -513,7 +512,6 @@ export function TradingSignalsTable() {
               </div>
             </div>
           )}
-
           {filteredAndSortedSignals.length === 0 && (
             <div className="text-center py-12">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
