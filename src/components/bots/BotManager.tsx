@@ -219,42 +219,6 @@ export function BotManager() {
                 </div>
               </div>
 
-              {/* Trading Amount Setting */}
-              <div className="space-y-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                  Trading Amount
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
-                    <input
-                      type="number"
-                      value={tradeAmount}
-                      onChange={(e) => setTradeAmount(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSaveAmount()}
-                      placeholder="10.00"
-                      min="0.01"
-                      step="0.01"
-                      className="w-full pl-7 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                    />
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={handleSaveAmount}
-                    disabled={isLoading || !tradeAmount || parseFloat(tradeAmount) <= 0}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      'Set'
-                    )}
-                  </Button>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Base amount for automated trades (martingale will calculate subsequent levels)
-                </div>
-              </div>
               {/* Control Buttons */}
               <div className="flex gap-2 pt-2">
                 {bot.status === 'running' ? (
