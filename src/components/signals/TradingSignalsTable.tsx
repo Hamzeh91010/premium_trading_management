@@ -512,6 +512,7 @@ export function TradingSignalsTable() {
               </div>
             </div>
           )}
+
           {filteredAndSortedSignals.length === 0 && (
             <div className="text-center py-12">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -523,7 +524,6 @@ export function TradingSignalsTable() {
               </p>
             </div>
           )}
-          </>
           )}
         </CardContent>
       </Card>
