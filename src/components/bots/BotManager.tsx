@@ -12,13 +12,19 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Zap
+  Zap,
+  ExternalLink,
+  X,
+  Download,
+  RefreshCw
 } from 'lucide-react'
 import { useBotManager } from '@/hooks/useBotManager'
 import { getStatusColor } from '@/lib/utils'
 
 export function BotManager() {
   const { bots, startBot, stopBot, restartBot, updateBotStatus } = useBotManager()
+  const [selectedBotLogs, setSelectedBotLogs] = React.useState<string | null>(null)
+  const [showLogsModal, setShowLogsModal] = React.useState(false)
   const [tradeAmount, setTradeAmount] = React.useState('10.00')
   const [isLoading, setIsLoading] = React.useState(false)
 
@@ -112,8 +118,43 @@ export function BotManager() {
     return `${hours}h ${minutes}m`
   }
 
+  const openLogsModal = (botId: string) => {
+    setSelectedBotLogs(botId)
+    setShowLogsModal(true)
+  }
+
+  const closeLogsModal = () => {
+    setShowLogsModal(false)
+    setSelectedBotLogs(null)
+  }
+
+  const getSelectedBotLogs = () => {
+    if (!selectedBotLogs) return []
+    const bot = bots.find(b => b.id === selectedBotLogs)
+    return bot?.logs || []
+  }
+
+  const downloadLogs = () => {
+    if (!selectedBotLogs) return
+    
+    const bot = bots.find(b => b.id === selectedBotLogs)
+    if (!bot) return
+
+    const logsText = bot.logs.join('\n')
+    const blob = new Blob([logsText], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${bot.name.replace(/\s+/g, '_')}_logs_${new Date().toISOString().split('T')[0]}.txt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   return (
-    <div className="p-6 space-y-6">
+    <>
+      <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Bot Management</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -202,9 +243,15 @@ export function BotManager() {
               </div>
 
               {/* Recent Logs */}
-              <div className="space-y-2">
+              <div 
+                className="space-y-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 p-2 rounded-lg transition-colors"
+                onClick={() => openLogsModal(bot.id)}
+              >
                 <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                  Python Process Logs
+                  <div className="flex items-center justify-between">
+                    <span>Python Process Logs</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </div>
                 </div>
                 <div className="bg-gray-900 text-green-400 p-3 rounded-lg font-mono text-xs max-h-32 overflow-y-auto">
                   {bot.logs.length > 0 ? (
@@ -215,6 +262,11 @@ export function BotManager() {
                     ))
                   ) : (
                     <div className="text-gray-500">No process logs available</div>
+                  )}
+                  {bot.logs.length > 5 && (
+                    <div className="text-blue-400 text-center mt-2 text-xs">
+                      Click to view all {bot.logs.length} logs...
+                    </div>
                   )}
                 </div>
               </div>
@@ -352,6 +404,105 @@ export function BotManager() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+
+      {/* Detailed Logs Modal */}
+      {showLogsModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 w-full max-w-4xl max-h-[80vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-3">
+                <Terminal className="w-6 h-6 text-blue-500" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    Python Process Logs
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {bots.find(b => b.id === selectedBotLogs)?.name || 'Bot'} - 
+                    {getSelectedBotLogs().length} log entries
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={downloadLogs}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateBotStatus()}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={closeLogsModal}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-hidden p-6">
+              <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm h-full overflow-y-auto">
+                {getSelectedBotLogs().length > 0 ? (
+                  <div className="space-y-1">
+                    {getSelectedBotLogs().map((log, index) => (
+                      <div 
+                        key={index} 
+                        className="hover:bg-gray-800/50 px-2 py-1 rounded transition-colors"
+                      >
+                        <span className="text-gray-500 mr-3">
+                          {String(index + 1).padStart(3, '0')}:
+                        </span>
+                        {log}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="text-center">
+                      <Terminal className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No process logs available</p>
+                      <p className="text-xs mt-2">Start the bot to see logs here</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+              <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-4">
+                  <span>Total Logs: {getSelectedBotLogs().length}</span>
+                  <span>
+                    Bot Status: 
+                    <Badge className={`ml-2 ${getStatusColor(bots.find(b => b.id === selectedBotLogs)?.status || 'stopped')}`}>
+                      {bots.find(b => b.id === selectedBotLogs)?.status || 'Unknown'}
+                    </Badge>
+                  </span>
+                </div>
+                <div className="text-xs">
+                  Last updated: {new Date().toLocaleTimeString()}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
