@@ -459,6 +459,9 @@ export function TradingSignalsTable() {
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
@@ -521,9 +524,6 @@ export function TradingSignalsTable() {
               </p>
             </div>
           )}
-          )}
-        </CardContent>
-      </Card>
           )}
         </CardContent>
       </Card>
