@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react'
+import { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -21,7 +22,7 @@ import {
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
-interface TradingSignal {
+export interface TradingSignal {
   pair: string
   entry_time: string
   direction: 'BUY' | 'SELL'
@@ -42,108 +43,12 @@ interface TradingSignal {
   trade_count?: number
 }
 
-const mockSignals: TradingSignal[] = [
-  {
-    pair: "AUD/JPY OTC",
-    entry_time: "03:09",
-    direction: "BUY",
-    trade_duration: "5 minutes",
-    is_otc: true,
-    is_expired: true,
-    received_at: "2025-07-26 03:06:58",
-    result: "win",
-    message_id: 410,
-    raw_text: "🇦🇺 AUD/JPY OTC\n🕘 תוקף 5M\n⏺️ כניסה בשעה 03:09\n🟩 קנייה\n\n🔽 רמות מרטינגייל\nרמה 1 בשעה 03:14\nרמה 2 בשעה 03:19\nרמה 3 בשעה 03:24",
-    martingale_times: ["03:14", "03:19", "03:24"],
-    executed: true,
-    end_time: "03:14",
-    payout_percent: "+90%",
-    total_profit: 9.0,
-    total_staked: 10.0,
-    base_amount: 10.0,
-    trade_count: 1
-  },
-  {
-    pair: "CAD/CHF OTC",
-    entry_time: "03:10",
-    direction: "SELL",
-    trade_duration: "5 minutes",
-    is_otc: true,
-    is_expired: true,
-    received_at: "2025-07-26 03:08:34",
-    result: "win",
-    message_id: 411,
-    raw_text: "🇨🇦 CAD/CHF OTC\n🕘 תוקף 5M\n⏺️ כניסה בשעה 03:10\n🟥 מכירה\n\n🔽 רמות מרטינגייל\nרמה 1 בשעה 03:15\nרמה 2 בשעה 03:20\nרמה 3 בשעה 03:25",
-    martingale_times: ["03:15", "03:20", "03:25"],
-    executed: true,
-    end_time: "03:15",
-    payout_percent: "+91%",
-    total_profit: 9.1,
-    total_staked: 10.0,
-    base_amount: 10.0,
-    trade_count: 1
-  },
-  {
-    pair: "CAD/CHF OTC",
-    entry_time: "03:20",
-    direction: "SELL",
-    trade_duration: "5 minutes",
-    is_otc: true,
-    is_expired: true,
-    received_at: "2025-07-26 03:18:32",
-    result: "win",
-    message_id: 412,
-    raw_text: "🇨🇦 CAD/CHF OTC\n🕘 תוקף 5M\n⏺️ כניסה בשעה 03:20\n🟥 מכירה\n\n🔽 רמות מרטינגייל\nרמה 1 בשעה 03:25\nרמה 2 בשעה 03:30\nרמה 3 בשעה 03:35",
-    martingale_times: ["03:25", "03:30", "03:35"],
-    executed: true,
-    end_time: "03:30",
-    payout_percent: "+68%",
-    total_profit: 9.7,
-    total_staked: 38.99,
-    base_amount: 10.0,
-    trade_count: 2
-  },
-  {
-    pair: "NZD/USD",
-    entry_time: "13:38",
-    direction: "BUY",
-    trade_duration: "5 minutes",
-    is_otc: false,
-    is_expired: false,
-    received_at: "2025-07-26 13:36:16",
-    result: null,
-    message_id: 448,
-    raw_text: "🇳🇿 NZD/USD\n🕘 תוקף 5M\n⏺️ כניסה בשעה 13:38\n🟩 קנייה\n\n🔽 רמות מרטינגייל\nרמה 1 בשעה 13:43\nרמה 2 בשעה 13:48\nרמה 3 בשעה 13:53",
-    martingale_times: ["13:43", "13:48", "13:53"],
-    executed: false
-  },
-  {
-    pair: "EUR/USD",
-    entry_time: "14:15",
-    direction: "BUY",
-    trade_duration: "3 minutes",
-    is_otc: false,
-    is_expired: true,
-    received_at: "2025-07-26 14:12:45",
-    result: "loss",
-    message_id: 449,
-    raw_text: "🇪🇺 EUR/USD\n🕘 תוקף 3M\n⏺️ כניסה בשעה 14:15\n🟩 קנייה",
-    martingale_times: ["14:18", "14:21", "14:24"],
-    executed: true,
-    end_time: "14:18",
-    payout_percent: "-100%",
-    total_profit: -10.0,
-    total_staked: 10.0,
-    base_amount: 10.0,
-    trade_count: 1
-  }
-]
-
 type SortField = keyof TradingSignal
 type SortDirection = 'asc' | 'desc'
 
 export function TradingSignalsTable() {
-  const [signals] = useState<TradingSignal[]>(mockSignals)
+  const [signals, setSignals] = useState<TradingSignal[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [directionFilter, setDirectionFilter] = useState<string>('all')
@@ -153,7 +58,31 @@ export function TradingSignalsTable() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
+  // Fetch signals data from ALLSignals.json
+  useEffect(() => {
+    const fetchSignals = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch('/ALLSignals.json')
+        if (response.ok) {
+          const data: TradingSignal[] = await response.json()
+          setSignals(data)
+        } else {
+          console.error('Failed to fetch signals data')
+        }
+      } catch (error) {
+        console.error('Error fetching signals:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchSignals()
+  }, [])
+
   const filteredAndSortedSignals = useMemo(() => {
+    if (isLoading || signals.length === 0) return []
+    
     let filtered = signals.filter(signal => {
       const matchesSearch = 
         signal.pair.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -254,7 +183,7 @@ export function TradingSignalsTable() {
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
             <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
+            {isLoading ? 'Loading...' : 'Refresh'}
           </Button>
           <Button variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
@@ -340,6 +269,12 @@ export function TradingSignalsTable() {
       {/* Data Table */}
       <Card>
         <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
+              <span className="text-gray-600 dark:text-gray-400">Loading trading signals...</span>
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-800">
@@ -590,6 +525,7 @@ export function TradingSignalsTable() {
                 Try adjusting your search criteria or filters
               </p>
             </div>
+          )}
           )}
         </CardContent>
       </Card>
