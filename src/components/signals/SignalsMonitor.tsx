@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { TradingSignalsTable } from './TradingSignalsTable'
 import { CurrencyPairAnalytics } from './CurrencyPairAnalytics'
+import { useRealSignals } from '@/hooks/useRealSignals'
 
 // Mock data for demonstration
 const mockSignals = [
@@ -142,6 +143,15 @@ const mockSignals = [
 ]
 
 export function SignalsMonitor() {
+  const { signals, fetchSignals } = useRealSignals()
+  
+  React.useEffect(() => {
+    fetchSignals()
+  }, [fetchSignals])
+
+  // Use real signals if available, otherwise fall back to mock data
+  const displaySignals = signals.length > 0 ? signals : mockSignals
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -151,7 +161,7 @@ export function SignalsMonitor() {
         </p>
       </div>
 
-      <CurrencyPairAnalytics signals={mockSignals} />
+      <CurrencyPairAnalytics signals={displaySignals} />
 
       <TradingSignalsTable />
     </div>

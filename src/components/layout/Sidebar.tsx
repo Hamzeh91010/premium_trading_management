@@ -8,7 +8,9 @@ import {
   Bell, 
   Home,
   Activity,
-  Zap
+  Zap,
+  Terminal,
+  Radio
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -21,7 +23,9 @@ interface SidebarProps {
 const navigationItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
   { id: 'bots', label: 'Bot Control', icon: Bot },
+  { id: 'bot-manager', label: 'Bot Manager', icon: Terminal },
   { id: 'signals', label: 'Signals', icon: Activity },
+  { id: 'real-signals', label: 'Live Signals', icon: Radio },
   { id: 'strategy', label: 'Strategy Studio', icon: Zap },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'notifications', label: 'Notifications', icon: Bell },

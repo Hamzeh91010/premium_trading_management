@@ -6,6 +6,8 @@ import { Dashboard } from '@/components/dashboard/Dashboard'
 import { BotControlCenter } from '@/components/bots/BotControlCenter'
 import { SignalsMonitor } from '@/components/signals/SignalsMonitor'
 import { ComingSoon } from '@/components/placeholder/ComingSoon'
+import { BotManager } from '@/components/bots/BotManager'
+import { RealTimeSignals } from '@/components/signals/RealTimeSignals'
 
 function App() {
   const [showHomePage, setShowHomePage] = useState(true)
@@ -47,6 +49,10 @@ function App() {
         return <BotControlCenter />
       case 'signals':
         return <SignalsMonitor />
+      case 'bot-manager':
+        return <BotManager />
+      case 'real-signals':
+        return <RealTimeSignals />
       case 'strategy':
         return (
           <ComingSoon 
