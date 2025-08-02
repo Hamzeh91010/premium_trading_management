@@ -215,7 +215,7 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
             </CardHeader>
             <CardContent className="p-0">
               {recentSignals.length > 0 ? (
-                <TradingSignalsList signals={recentSignals} maxItems={10} />
+                <TradingSignalsList maxItems={10} />
               ) : (
                 <div className="p-8 text-center text-gray-400">
                   No trading signals found

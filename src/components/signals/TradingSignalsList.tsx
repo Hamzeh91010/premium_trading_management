@@ -1,10 +1,11 @@
 import React from 'react'
+import { useState, useEffect } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { TrendingUp, TrendingDown, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
-interface TradingSignal {
+export interface TradingSignal {
   pair: string
   entry_time: string
   direction: 'BUY' | 'SELL'
@@ -26,11 +27,69 @@ interface TradingSignal {
 }
 
 interface TradingSignalsListProps {
-  signals: TradingSignal[]
   maxItems?: number
 }
 
-export function TradingSignalsList({ signals, maxItems = 10 }: TradingSignalsListProps) {
+export function TradingSignalsList({ maxItems = 10 }: TradingSignalsListProps) {
+  const [signals, setSignals] = useState<TradingSignal[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchSignalsFromDatabase = async () => {
+    try {
+      setIsLoading(true)
+      // Fetch from all_signals table where is_status = 'completed'
+      const response = await fetch('/api/signals/all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `SELECT * FROM all_signals WHERE is_status = 'completed' ORDER BY received_at DESC LIMIT ${maxItems}`
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setSignals(data.results || [])
+      } else {
+        // Fallback to JSON file if database API is not available
+        console.log('Database API not available, trying JSON fallback')
+        const fallbackResponse = await fetch('/ALLSignals.json')
+        if (fallbackResponse.ok) {
+          const data: TradingSignal[] = await fallbackResponse.json()
+          const completedSignals = data
+            .filter(s => s.executed && s.result !== null)
+            .slice(0, maxItems)
+          setSignals(completedSignals)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching signals:', error)
+      // Try fallback
+      try {
+        const fallbackResponse = await fetch('/ALLSignals.json')
+        if (fallbackResponse.ok) {
+          const data: TradingSignal[] = await fallbackResponse.json()
+          const completedSignals = data
+            .filter(s => s.executed && s.result !== null)
+            .slice(0, maxItems)
+          setSignals(completedSignals)
+        }
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError)
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchSignalsFromDatabase()
+    
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(fetchSignalsFromDatabase, 5000)
+    
+    return () => clearInterval(interval)
+  }, [maxItems])
+
   const displaySignals = signals.slice(0, maxItems)
 
   const getDirectionBadge = (direction: 'BUY' | 'SELL') => {
@@ -183,7 +242,7 @@ export function TradingSignalsList({ signals, maxItems = 10 }: TradingSignalsLis
         </div>
 
         {/* Show more indicator if there are more signals */}
-        {signals.length > maxItems && (
+        {signals.length > maxItems && !isLoading && (
           <div className="p-4 text-center border-t border-gray-700/30">
             <div className="text-sm text-gray-400">
               Showing {maxItems} of {signals.length} signals
@@ -192,10 +251,18 @@ export function TradingSignalsList({ signals, maxItems = 10 }: TradingSignalsLis
         )}
 
         {/* Empty state */}
-        {signals.length === 0 && (
+        {signals.length === 0 && !isLoading && (
           <div className="p-8 text-center">
             <AlertCircle className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <div className="text-gray-400">No trading signals available</div>
+          </div>
+        )}
+
+        {/* Loading state */}
+        {isLoading && (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <div className="text-gray-400">Loading trading signals...</div>
           </div>
         )}
       </CardContent>
