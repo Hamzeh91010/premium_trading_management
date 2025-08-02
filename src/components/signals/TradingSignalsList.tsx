@@ -20,6 +20,7 @@ export interface TradingSignal {
   executed: boolean
   end_time?: string
   payout_percent?: string
+  payout_percent?: number
   total_profit?: number
   total_staked?: number
   base_amount?: number
@@ -212,7 +213,7 @@ export function TradingSignalsList({ maxItems = 10 }: TradingSignalsListProps) {
                 </div>
                 {signal.payout_percent && (
                   <div className="text-xs text-gray-500 mt-1">
-                    {signal.payout_percent}
+                    {signal.payout_percent}%
                   </div>
                 )}
               </div>

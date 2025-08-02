@@ -37,6 +37,7 @@ export interface TradingSignal {
   executed: boolean
   end_time?: string
   payout_percent?: string
+  payout_percent?: number
   total_profit?: number
   total_staked?: number
   base_amount?: number
@@ -440,14 +441,8 @@ export function TradingSignalsTable() {
                     </td>
                     <td className="px-4 py-4">
                       {signal.payout_percent ? (
-                        <Badge 
-                          className={
-                            signal.payout_percent.startsWith('+') 
-                              ? 'bg-green-100 text-green-800 border-green-200'
-                              : 'bg-red-100 text-red-800 border-red-200'
-                          }
-                        >
-                          {signal.payout_percent}
+                        <Badge variant="outline">
+                          {signal.payout_percent}%
                         </Badge>
                       ) : (
                         <span className="text-gray-400">-</span>
