@@ -40,6 +40,15 @@ const createTableSQL = `
 
 // Create tables
 db.serialize(() => {
+  // Drop existing table to avoid unique constraint issues
+  db.run('DROP TABLE IF EXISTS all_signals', (err) => {
+    if (err) {
+      console.error('Error dropping all_signals table:', err);
+    } else {
+      console.log('Existing all_signals table dropped');
+    }
+  });
+
   // Create all_signals table
   db.run(createTableSQL, (err) => {
     if (err) {
