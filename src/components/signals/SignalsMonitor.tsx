@@ -95,8 +95,3 @@ export function SignalsMonitor() {
     </div>
   )
 }
-
-      <TradingSignalsTable />
-    </div>
-  )
-}
