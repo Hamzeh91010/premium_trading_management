@@ -12,12 +12,9 @@ export function SignalsMonitor() {
       setIsLoading(true)
       try {
         // Fetch all signals from ForexSignals.db all_signals table
-        const response = await fetch('/api/signals/all', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: "SELECT * FROM all_signals ORDER BY received_at DESC"
-          })
+        const response = await fetch('http://localhost:3001/api/signals/all', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
         })
         
         if (response.ok) {
