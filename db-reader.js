@@ -166,55 +166,6 @@ export function getAllSignals() {
     }
   });
 }
-      const query = `
-        SELECT 
-          message_id,
-          channel_type,
-          received_at,
-          pair,
-          base_amount,
-          entry_time,
-          end_time,
-          martingale_times,
-          martingale_amounts,
-          direction,
-          trade_duration,
-          is_otc,
-          is_status,
-          trading_result as result,
-          payout_percent,
-          trade_level,
-          total_profit,
-          total_staked,
-          raw_text,
-          is_executed as executed
-        FROM all_signals 
-        ORDER BY received_at DESC
-      `;
-      db.all(query, [], (err, rows) => {
-        if (err) {
-          console.error('Error querying all_signals table:', err);
-          resolve([]);
-        } else {
-          // Transform the data to match expected format
-          const transformedRows = rows.map(row => ({
-            ...row,
-            is_otc: Boolean(row.is_otc),
-            executed: Boolean(row.executed),
-            is_expired: row.is_status === 'expired',
-            martingale_times: row.martingale_times ? JSON.parse(row.martingale_times) : [],
-            trade_count: row.trade_level || 1
-          }));
-          console.log(`Retrieved ${rows.length} signals from database`);
-          resolve(transformedRows);
-        }
-      });
-    } catch (error) {
-      console.error('Error querying all_signals table:', error);
-      resolve([]);
-    }
-  });
-}
 
 export function getActiveSignals() {
   return new Promise((resolve, reject) => {
