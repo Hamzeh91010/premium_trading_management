@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start-mock-server": "lsof -ti tcp:3001 | xargs kill || true && node mock-server.js"
+    "start-mock-server": "node mock-server.js"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
