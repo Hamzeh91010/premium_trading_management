@@ -34,7 +34,28 @@ export function getAllSignals() {
 
     try {
       const query = `
-        SELECT * FROM all_signals 
+        SELECT 
+          message_id,
+          channel_type,
+          received_at,
+          pair,
+          base_amount,
+          entry_time,
+          end_time,
+          martingale_times,
+          martingale_amounts,
+          direction,
+          trade_duration,
+          is_otc,
+          is_status,
+          trading_result as result,
+          payout_percent,
+          trade_level,
+          total_profit,
+          total_staked,
+          raw_text,
+          is_executed as executed
+        FROM all_signals 
         ORDER BY received_at DESC
       `;
       db.all(query, [], (err, rows) => {
@@ -42,8 +63,17 @@ export function getAllSignals() {
           console.error('Error querying all_signals table:', err);
           resolve([]);
         } else {
+          // Transform the data to match expected format
+          const transformedRows = rows.map(row => ({
+            ...row,
+            is_otc: Boolean(row.is_otc),
+            executed: Boolean(row.executed),
+            is_expired: row.is_status === 'expired',
+            martingale_times: row.martingale_times ? JSON.parse(row.martingale_times) : [],
+            trade_count: row.trade_level || 1
+          }));
           console.log(`Retrieved ${rows.length} signals from database`);
-          resolve(rows);
+          resolve(transformedRows);
         }
       });
     } catch (error) {
@@ -63,8 +93,29 @@ export function getActiveSignals() {
 
     try {
       const query = `
-        SELECT * FROM all_signals 
-        WHERE is_status = 'processing' 
+        SELECT 
+          message_id,
+          channel_type,
+          received_at,
+          pair,
+          base_amount,
+          entry_time,
+          end_time,
+          martingale_times,
+          martingale_amounts,
+          direction,
+          trade_duration,
+          is_otc,
+          is_status,
+          trading_result as result,
+          payout_percent,
+          trade_level,
+          total_profit,
+          total_staked,
+          raw_text,
+          is_executed as executed
+        FROM all_signals 
+        WHERE is_status IN ('processing', 'pending') 
         ORDER BY received_at DESC
       `;
       db.all(query, [], (err, rows) => {
@@ -72,8 +123,17 @@ export function getActiveSignals() {
           console.error('Error querying active signals:', err);
           resolve([]);
         } else {
+          // Transform the data to match expected format
+          const transformedRows = rows.map(row => ({
+            ...row,
+            is_otc: Boolean(row.is_otc),
+            executed: Boolean(row.executed),
+            is_expired: row.is_status === 'expired',
+            martingale_times: row.martingale_times ? JSON.parse(row.martingale_times) : [],
+            trade_count: row.trade_level || 1
+          }));
           console.log(`Retrieved ${rows.length} active signals from database`);
-          resolve(rows);
+          resolve(transformedRows);
         }
       });
     } catch (error) {
@@ -93,8 +153,29 @@ export function getRecentResults() {
 
     try {
       const query = `
-        SELECT * FROM all_signals 
-        WHERE is_status = 'completed' 
+        SELECT 
+          message_id,
+          channel_type,
+          received_at,
+          pair,
+          base_amount,
+          entry_time,
+          end_time,
+          martingale_times,
+          martingale_amounts,
+          direction,
+          trade_duration,
+          is_otc,
+          is_status,
+          trading_result as result,
+          payout_percent,
+          trade_level,
+          total_profit,
+          total_staked,
+          raw_text,
+          is_executed as executed
+        FROM all_signals 
+        WHERE is_status = 'completed' AND trading_result IS NOT NULL
         ORDER BY received_at DESC 
         LIMIT 10
       `;
@@ -103,8 +184,17 @@ export function getRecentResults() {
           console.error('Error querying recent results:', err);
           resolve([]);
         } else {
+          // Transform the data to match expected format
+          const transformedRows = rows.map(row => ({
+            ...row,
+            is_otc: Boolean(row.is_otc),
+            executed: Boolean(row.executed),
+            is_expired: row.is_status === 'expired',
+            martingale_times: row.martingale_times ? JSON.parse(row.martingale_times) : [],
+            trade_count: row.trade_level || 1
+          }));
           console.log(`Retrieved ${rows.length} recent results from database`);
-          resolve(rows);
+          resolve(transformedRows);
         }
       });
     } catch (error) {
@@ -126,11 +216,11 @@ export function getTodayStats() {
       const query = `
         SELECT 
           COUNT(*) as totalTrades,
-          SUM(CASE WHEN result = 'win' THEN 1 ELSE 0 END) as wins,
-          SUM(CASE WHEN result = 'loss' THEN 1 ELSE 0 END) as losses,
+          SUM(CASE WHEN trading_result = 'win' THEN 1 ELSE 0 END) as wins,
+          SUM(CASE WHEN trading_result = 'loss' THEN 1 ELSE 0 END) as losses,
           SUM(COALESCE(total_profit, 0)) as totalProfit
         FROM all_signals 
-        WHERE DATE(received_at) = DATE('now') AND is_status = 'completed'
+        WHERE DATE(received_at) = DATE('now') AND is_status = 'completed' AND trading_result IS NOT NULL
       `;
       db.get(query, [], (err, row) => {
         if (err) {
