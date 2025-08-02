@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,33 +12,160 @@ import {
   RefreshCw,
   Zap
 } from 'lucide-react'
-import { useRealSignals } from '@/hooks/useRealSignals'
 import { formatCurrency, formatPercentage } from '@/lib/utils'
 
+interface DatabaseSignal {
+  id: number
+  pair: string
+  direction: 'BUY' | 'SELL'
+  entry_time: string
+  trade_duration: string
+  is_status: 'processing' | 'completed'
+  result?: 'win' | 'loss'
+  profit?: number
+  payout_percent?: string
+  received_at: string
+  trade_count?: number
+  total_profit?: number
+  total_staked?: number
+}
+
+interface TodayStats {
+  totalTrades: number
+  wins: number
+  losses: number
+  totalProfit: number
+  winRate: number
+}
+
 export function RealTimeSignals() {
-  const { 
-    signals, 
-    isLoading, 
-    lastUpdated, 
-    fetchSignals, 
-    getActiveSignals, 
-    getCompletedSignals,
-    getTodayStats 
-  } = useRealSignals()
+  const [activeSignals, setActiveSignals] = useState<DatabaseSignal[]>([])
+  const [recentResults, setRecentResults] = useState<DatabaseSignal[]>([])
+  const [todayStats, setTodayStats] = useState<TodayStats>({
+    totalTrades: 0,
+    wins: 0,
+    losses: 0,
+    totalProfit: 0,
+    winRate: 0
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+
+  const fetchActiveSignals = async () => {
+    try {
+      // Fetch active signals from today_signals table where is_status = 'processing'
+      const response = await fetch('/api/signals/active', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: "SELECT * FROM today_signals WHERE is_status = 'processing' ORDER BY received_at DESC"
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setActiveSignals(data.results || [])
+      } else {
+        // Fallback to mock data if API is not available
+        console.log('API not available, using mock data for active signals')
+      }
+    } catch (error) {
+      console.log('Error fetching active signals:', error)
+    }
+  }
+
+  const fetchRecentResults = async () => {
+    try {
+      // Fetch recent completed signals from all_signals table where is_status = 'completed'
+      const response = await fetch('/api/signals/recent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: "SELECT * FROM all_signals WHERE is_status = 'completed' ORDER BY received_at DESC LIMIT 10"
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setRecentResults(data.results || [])
+      } else {
+        // Fallback to mock data if API is not available
+        console.log('API not available, using mock data for recent results')
+      }
+    } catch (error) {
+      console.log('Error fetching recent results:', error)
+    }
+  }
+
+  const fetchTodayStats = async () => {
+    try {
+      // Fetch today's statistics from all_signals table
+      const response = await fetch('/api/signals/today-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `
+            SELECT 
+              COUNT(*) as totalTrades,
+              SUM(CASE WHEN result = 'win' THEN 1 ELSE 0 END) as wins,
+              SUM(CASE WHEN result = 'loss' THEN 1 ELSE 0 END) as losses,
+              SUM(COALESCE(total_profit, 0)) as totalProfit
+            FROM all_signals 
+            WHERE DATE(received_at) = DATE('now') AND is_status = 'completed'
+          `
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const stats = data.results?.[0]
+        if (stats) {
+          const winRate = stats.totalTrades > 0 ? (stats.wins / stats.totalTrades) * 100 : 0
+          setTodayStats({
+            totalTrades: stats.totalTrades || 0,
+            wins: stats.wins || 0,
+            losses: stats.losses || 0,
+            totalProfit: stats.totalProfit || 0,
+            winRate
+          })
+        }
+      } else {
+        // Fallback to mock data if API is not available
+        console.log('API not available, using mock data for today stats')
+      }
+    } catch (error) {
+      console.log('Error fetching today stats:', error)
+    }
+  }
+
+  const fetchAllData = async () => {
+    setIsLoading(true)
+    try {
+      await Promise.all([
+        fetchActiveSignals(),
+        fetchRecentResults(),
+        fetchTodayStats()
+      ])
+      setLastUpdated(new Date().toISOString())
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    fetchSignals()
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchSignals, 30000)
+    // Initial fetch
+    fetchAllData()
+    
+    // Set up auto-refresh every 5 seconds
+    const interval = setInterval(fetchAllData, 5000)
+    
     return () => clearInterval(interval)
-  }, [fetchSignals])
+  }, [])
 
-  const activeSignals = getActiveSignals()
-  const completedSignals = getCompletedSignals().slice(0, 10) // Show last 10
-  const todayStats = getTodayStats()
-
-  const getStatusBadge = (signal: any) => {
-    if (!signal.executed && !signal.is_expired) {
+  const getStatusBadge = (signal: DatabaseSignal) => {
+    if (signal.is_status === 'processing') {
       return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Active</Badge>
     }
     if (signal.result === 'win') {
@@ -47,11 +174,11 @@ export function RealTimeSignals() {
     if (signal.result === 'loss') {
       return <Badge className="bg-red-100 text-red-800 border-red-200">Lost</Badge>
     }
-    return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Expired</Badge>
+    return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Completed</Badge>
   }
 
-  const getResultIcon = (signal: any) => {
-    if (!signal.executed && !signal.is_expired) {
+  const getResultIcon = (signal: DatabaseSignal) => {
+    if (signal.is_status === 'processing') {
       return <Clock className="w-4 h-4 text-blue-500" />
     }
     if (signal.result === 'win') {
@@ -85,7 +212,7 @@ export function RealTimeSignals() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Real-Time Signals</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Live trading signals from your bots
+            Live trading signals from your database
           </p>
         </div>
         
@@ -98,7 +225,7 @@ export function RealTimeSignals() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={fetchSignals}
+            onClick={fetchAllData}
             disabled={isLoading}
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -162,7 +289,7 @@ export function RealTimeSignals() {
             <div className="space-y-3">
               {activeSignals.length > 0 ? (
                 activeSignals.map((signal) => (
-                  <div key={signal.message_id} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div key={signal.id} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                     <div className="flex items-center gap-3">
                       {getResultIcon(signal)}
                       <div>
@@ -195,19 +322,19 @@ export function RealTimeSignals() {
           </CardContent>
         </Card>
 
-        {/* Recent Completed Signals */}
+        {/* Recent Results */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-green-500" />
-              Recent Results ({completedSignals.length})
+              Recent Results ({recentResults.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {completedSignals.length > 0 ? (
-                completedSignals.map((signal) => (
-                  <div key={signal.message_id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              {recentResults.length > 0 ? (
+                recentResults.map((signal) => (
+                  <div key={signal.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-center gap-3">
                       {getResultIcon(signal)}
                       <div>
@@ -238,7 +365,7 @@ export function RealTimeSignals() {
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No completed signals</p>
+                  <p>No recent results</p>
                 </div>
               )}
             </div>
