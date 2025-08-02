@@ -53,16 +53,45 @@ const TradingResultsModal: React.FC<TradingResultsModalProps> = ({ isOpen, onClo
   const fetchSignalsData = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/ALLSignals.json')
+      // Fetch from all_signals table in database
+      const response = await fetch('/api/signals/all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: "SELECT * FROM all_signals WHERE is_status = 'completed' ORDER BY received_at DESC"
+        })
+      })
+      
       if (response.ok) {
-        const data: TradingSignal[] = await response.json()
+        const result = await response.json()
+        const data: TradingSignal[] = result.results || []
         setSignals(data)
         calculateStats(data)
       } else {
-        console.error('Failed to fetch signals data')
+        // Fallback to JSON file if database API is not available
+        console.log('Database API not available, trying JSON fallback')
+        const fallbackResponse = await fetch('/ALLSignals.json')
+        if (fallbackResponse.ok) {
+          const data: TradingSignal[] = await fallbackResponse.json()
+          setSignals(data)
+          calculateStats(data)
+        } else {
+          console.error('Failed to fetch signals data from both database and JSON')
+        }
       }
     } catch (error) {
-      console.error('Error fetching signals:', error)
+      console.error('Error fetching signals from database:', error)
+      // Fallback to JSON file
+      try {
+        const fallbackResponse = await fetch('/ALLSignals.json')
+        if (fallbackResponse.ok) {
+          const data: TradingSignal[] = await fallbackResponse.json()
+          setSignals(data)
+          calculateStats(data)
+        }
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError)
+      }
     } finally {
       setLoading(false)
     }
