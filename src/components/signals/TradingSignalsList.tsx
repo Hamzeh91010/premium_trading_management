@@ -37,7 +37,6 @@ export function TradingSignalsList({ maxItems = 10 }: TradingSignalsListProps) {
   const fetchSignalsFromDatabase = async () => {
     try {
       setIsLoading(true)
-      // Fetch from all_signals table where is_status = 'completed'
       const response = await fetch('/api/signals/all', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,32 +49,12 @@ export function TradingSignalsList({ maxItems = 10 }: TradingSignalsListProps) {
         const data = await response.json()
         setSignals(data.results || [])
       } else {
-        // Fallback to JSON file if database API is not available
-        console.log('Database API not available, trying JSON fallback')
-        const fallbackResponse = await fetch('/ALLSignals.json')
-        if (fallbackResponse.ok) {
-          const data: TradingSignal[] = await fallbackResponse.json()
-          const completedSignals = data
-            .filter(s => s.executed && s.result !== null)
-            .slice(0, maxItems)
-          setSignals(completedSignals)
-        }
+        console.error('Database API not available')
+        setSignals([])
       }
     } catch (error) {
       console.error('Error fetching signals:', error)
-      // Try fallback
-      try {
-        const fallbackResponse = await fetch('/ALLSignals.json')
-        if (fallbackResponse.ok) {
-          const data: TradingSignal[] = await fallbackResponse.json()
-          const completedSignals = data
-            .filter(s => s.executed && s.result !== null)
-            .slice(0, maxItems)
-          setSignals(completedSignals)
-        }
-      } catch (fallbackError) {
-        console.error('Fallback also failed:', fallbackError)
-      }
+      setSignals([])
     } finally {
       setIsLoading(false)
     }
