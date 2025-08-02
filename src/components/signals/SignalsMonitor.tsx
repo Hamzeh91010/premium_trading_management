@@ -11,10 +11,10 @@ export function SignalsMonitor() {
   React.useEffect(() => {
     const loadAllSignals = async () => {
       try {
-        const response = await fetch('/ALLSignals.json')
+        const response = await fetch('/api/signals/all')
         if (response.ok) {
-          const data: TradingSignal[] = await response.json()
-          setAllSignals(data)
+          const data = await response.json()
+          setAllSignals(data.results || [])
         }
       } catch (error) {
         console.error('Error loading signals:', error)

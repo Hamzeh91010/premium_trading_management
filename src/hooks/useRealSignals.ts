@@ -45,10 +45,9 @@ export const useRealSignals = create<RealSignalsState>((set, get) => ({
   fetchSignals: async () => {
     set({ isLoading: true })
     try {
-      // In a real implementation, this would fetch from your backend API
-      // For now, we'll use the mock data from the JSON file
-      const response = await fetch('/ALLSignals.json')
-      const signals = await response.json()
+      const response = await fetch('/api/signals/all')
+      const data = await response.json()
+      const signals = data.results || []
       
       set({ 
         signals, 

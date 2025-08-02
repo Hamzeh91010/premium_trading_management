@@ -63,10 +63,10 @@ export function TradingSignalsTable() {
     const fetchSignals = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch('/ALLSignals.json')
+        const response = await fetch('/api/signals/all')
         if (response.ok) {
-          const data: TradingSignal[] = await response.json()
-          setSignals(data)
+          const data = await response.json()
+          setSignals(data.results || [])
         } else {
           console.error('Failed to fetch signals data')
         }
